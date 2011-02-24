@@ -80,7 +80,6 @@ void Receiver::Stop(void)
 
 unsigned __stdcall ThreadProc(void* pParam)
 {
-	OutputDebugString(_T("Start!!!!!!!!!!!!!!!!!!!!!!!!\n"));
 	TCHAR szError[BUFFER_SIZE];
 	char szCommand[BUFFER_SIZE];
 
@@ -151,8 +150,6 @@ unsigned __stdcall ThreadProc(void* pParam)
 
 unsigned __stdcall ChildThreadProc(void* pParam)
 {
-	OutputDebugString(_T("Child!!!!!!!!!!!!!!!!!!!!!!!!\n"));
-
 	ChildContext* pContext = (ChildContext*)pParam;
 
 	int nResult = 0, nReadBytes = 0, nCommandLength = 0;
@@ -251,7 +248,6 @@ unsigned __stdcall ChildThreadProc(void* pParam)
 LPCSTR AnalyzeMessage(LPCSTR lpszMessage, LPSTR lpszCommand, SIZE_T size, int* pDeltaX, int* pDeltaY)
 {
 	char tempBuffer[BUFFER_SIZE];
-	OutputDebugString(_T("Analyze!!!!!!!!!!!!!!!!!!!!!!!!\n"));
 
 	sscanf(lpszMessage, "%s %d %d?", lpszCommand, pDeltaX, pDeltaY);
 

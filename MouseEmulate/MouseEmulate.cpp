@@ -8,7 +8,12 @@
 #define MAX_LOADSTRING		100
 #define ID_SELECT_BUTTON	(WM_APP+1)
 #define fAltDown			0x2000
+#define fShiftDown			0x4000
 #define cRepeatON			0x0001
+#define ScancodeAlt			0x0038
+#define ScancodeShift		0x002A
+
+typedef enum { Tumble, Track, Dolly } MouseButton;
 
 // グローバル変数:
 HINSTANCE hInst;								// 現在のインターフェイス
@@ -161,6 +166,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int buttonWidth = 80;
 	int buttonHeight = 32;
 
+	static BOOL isSystemKeySet = FALSE;
+	INPUT input[2];
+
 	static Receiver receiver;
 
 	switch (message)
@@ -194,6 +202,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_BRIDGEMESSAGE:
 		{
+			SHORT mouseDownMessage, mouseUpMessage, mouseButtonState;
+			if (!strcmpi((LPCSTR)lParam, "tumble")) {
+				mouseDownMessage	= WM_LBUTTONDOWN;
+				mouseUpMessage		= WM_LBUTTONUP;
+				mouseButtonState	= MK_LBUTTON;
+			} else if (!strcmpi((LPCSTR)lParam, "track")) {
+				mouseDownMessage	= WM_MBUTTONDOWN;
+				mouseUpMessage		= WM_MBUTTONUP;
+				mouseButtonState	= MK_MBUTTON;
+			} else if (!strcmpi((LPCSTR)lParam, "dolly")) {
+				mouseDownMessage	= WM_RBUTTONDOWN;
+				mouseUpMessage		= WM_RBUTTONUP;
+				mouseButtonState	= MK_RBUTTON;
+			} else {
+				break;
+			}
+
 			int deltaX = LOWORD(wParam);
 			int deltaY = HIWORD(wParam);
 			int posX, posY;
@@ -213,42 +238,51 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//Sleep(5);
 			//PostMessage(hTargetWnd, WM_SYSKEYDOWN, 'F', MAKELONG(cRepeatON, fAltDown));
 						
-			//SendMessage(hTargetWnd, WM_SYSKEYDOWN, VK_MENU, 0);
-			//SendMessage(hTargetWnd, WM_MBUTTONDOWN, MK_SHIFT | MK_MBUTTON, 0);
-			//SendMessage(hTargetWnd, WM_MOUSEMOVE, MK_SHIFT | MK_MBUTTON, MAKELPARAM(deltaX, deltaY));
-			//SendMessage(hTargetWnd, WM_MBUTTONUP, 0, 0);
-			//SendMessage(hTargetWnd, WM_SYSKEYUP, VK_MENU, 0);
-			
 			// 親ウィンドウに送信
-			//PostMessage(hTargetWnd, WM_NCHITTEST, 0, MAKELPARAM(posX, posY));
-			//PostMessage(hTargetWnd, WM_MOUSEACTIVATE, (WPARAM)g_hChildWnd, MAKELPARAM(HTCLIENT, WM_LBUTTONDOWN));
-			//PostMessage(hTargetWnd, WM_SETCURSOR, (WPARAM)hTargetWnd, MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+			if (!isSystemKeySet) {
+				input[0].type			= INPUT_KEYBOARD;
+				input[0].ki.wVk			= VK_MENU;
+				input[0].ki.wScan		= MapVirtualKey(VK_MENU, 0);
+				input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
+				input[0].ki.time		= 0;						// タイムスタンプ
+				input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
 
-			PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_MENU, MAKELONG(cRepeatON, 0));
-			PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_MENU, MAKELONG(cRepeatON, fAltDown));
-			PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-			PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-			PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
+				input[1].type			= INPUT_KEYBOARD;
+				input[1].ki.wVk			= VK_SHIFT;
+				input[1].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
+				input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
+				input[1].ki.time		= 0;						// タイムスタンプ
+				input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
+
+				SendInput(2, input, sizeof(INPUT));
+				Sleep(5);
+				isSystemKeySet = TRUE;
+			}
 
 			// 子ウィンドウに送信
-			PostMessage(g_hChildWnd, WM_LBUTTONDOWN, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX, posY));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX+=1, posY+=3));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX+=1, posY+=3));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX+=1, posY+=3));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX+=1, posY+=3));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX+=1, posY+=3));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | MK_LBUTTON, MAKELPARAM(posX+=1, posY+=3));
-			PostMessage(g_hChildWnd, WM_LBUTTONUP, MK_SHIFT, MAKELPARAM(posX, posY));
+			PostMessage(g_hChildWnd, mouseDownMessage, MK_SHIFT | mouseButtonState, MAKELPARAM(posX, posY));
+			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | mouseButtonState, MAKELPARAM(posX+=10, posY+=30));
+			PostMessage(g_hChildWnd, mouseUpMessage, MK_SHIFT, MAKELPARAM(posX, posY));
 			
-			//PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-			//PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-			//PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-			//PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-			//PostMessage(hTargetWnd, WM_SYSKEYDOWN, VK_SHIFT, MAKELONG(cRepeatON, fAltDown));
-
 			// 親ウィンドウに送信
-			PostMessage(hTargetWnd, WM_KEYUP, VK_MENU, MAKELONG(cRepeatON, 0));
-			PostMessage(hTargetWnd, WM_KEYUP, VK_SHIFT, MAKELONG(cRepeatON, 0));
+			if (isSystemKeySet) {
+				input[0].type			= INPUT_KEYBOARD;
+				input[0].ki.wVk			= VK_SHIFT;
+				input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
+				input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+				input[0].ki.time		= 0;										// タイムスタンプ
+				input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
+
+				input[1].type			= INPUT_KEYBOARD;
+				input[1].ki.wVk			= VK_MENU;
+				input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
+				input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+				input[1].ki.time		= 0;										// タイムスタンプ
+				input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
+				SendInput(2, input, sizeof(INPUT));
+				Sleep(5);
+				isSystemKeySet = FALSE;
+			}
 		}
 		break;
 
