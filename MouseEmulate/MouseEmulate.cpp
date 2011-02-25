@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MouseEmulate.h"
 #include "Receiver.h"
+#include "VirtualMotion.h"
 
 #define MAX_LOADSTRING		100
 #define ID_SELECT_BUTTON	(WM_APP+1)
@@ -171,6 +172,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	static Receiver receiver;
 
+	VMMouseButtonOperation operation;
+
 	switch (message)
 	{
 	case WM_CREATE:
@@ -240,49 +243,53 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						
 			// 親ウィンドウに送信
 			if (!isSystemKeySet) {
-				input[0].type			= INPUT_KEYBOARD;
-				input[0].ki.wVk			= VK_MENU;
-				input[0].ki.wScan		= MapVirtualKey(VK_MENU, 0);
-				input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
-				input[0].ki.time		= 0;						// タイムスタンプ
-				input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
+				VMVirtualKeyDown(VK_MENU);
+				VMVirtualKeyDown(VK_SHIFT);
+				//input[0].type			= INPUT_KEYBOARD;
+				//input[0].ki.wVk			= VK_MENU;
+				//input[0].ki.wScan		= MapVirtualKey(VK_MENU, 0);
+				//input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
+				//input[0].ki.time		= 0;						// タイムスタンプ
+				//input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
 
-				input[1].type			= INPUT_KEYBOARD;
-				input[1].ki.wVk			= VK_SHIFT;
-				input[1].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
-				input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
-				input[1].ki.time		= 0;						// タイムスタンプ
-				input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
+				//input[1].type			= INPUT_KEYBOARD;
+				//input[1].ki.wVk			= VK_SHIFT;
+				//input[1].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
+				//input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
+				//input[1].ki.time		= 0;						// タイムスタンプ
+				//input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
 
-				SendInput(2, input, sizeof(INPUT));
+				//SendInput(2, input, sizeof(INPUT));
 				Sleep(5);
 				isSystemKeySet = TRUE;
 			}
 
 			// 子ウィンドウに送信
-			PostMessage(g_hChildWnd, mouseDownMessage, MK_SHIFT | mouseButtonState, MAKELPARAM(posX, posY));
-			PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | mouseButtonState, MAKELPARAM(posX+=10, posY+=30));
-			PostMessage(g_hChildWnd, mouseUpMessage, MK_SHIFT, MAKELPARAM(posX, posY));
+			//PostMessage(g_hChildWnd, mouseDownMessage, MK_SHIFT | mouseButtonState, MAKELPARAM(posX, posY));
+			//PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | mouseButtonState, MAKELPARAM(posX+=10, posY+=30));
+			//PostMessage(g_hChildWnd, mouseUpMessage, MK_SHIFT, MAKELPARAM(posX, posY));
+
+
 			
 			// 親ウィンドウに送信
-			if (isSystemKeySet) {
-				input[0].type			= INPUT_KEYBOARD;
-				input[0].ki.wVk			= VK_SHIFT;
-				input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
-				input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-				input[0].ki.time		= 0;										// タイムスタンプ
-				input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
+			//if (isSystemKeySet) {
+			//	input[0].type			= INPUT_KEYBOARD;
+			//	input[0].ki.wVk			= VK_SHIFT;
+			//	input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
+			//	input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+			//	input[0].ki.time		= 0;										// タイムスタンプ
+			//	input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
 
-				input[1].type			= INPUT_KEYBOARD;
-				input[1].ki.wVk			= VK_MENU;
-				input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
-				input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-				input[1].ki.time		= 0;										// タイムスタンプ
-				input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
-				SendInput(2, input, sizeof(INPUT));
-				Sleep(5);
-				isSystemKeySet = FALSE;
-			}
+			//	input[1].type			= INPUT_KEYBOARD;
+			//	input[1].ki.wVk			= VK_MENU;
+			//	input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
+			//	input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+			//	input[1].ki.time		= 0;										// タイムスタンプ
+			//	input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
+			//	SendInput(2, input, sizeof(INPUT));
+			//	Sleep(5);
+			//	isSystemKeySet = FALSE;
+			//}
 		}
 		break;
 
@@ -327,6 +334,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_DESTROY:
+
+		input[0].type			= INPUT_KEYBOARD;
+		input[0].ki.wVk			= VK_SHIFT;
+		input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
+		input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+		input[0].ki.time		= 0;										// タイムスタンプ
+		input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
+
+		input[1].type			= INPUT_KEYBOARD;
+		input[1].ki.wVk			= VK_MENU;
+		input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
+		input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+		input[1].ki.time		= 0;										// タイムスタンプ
+		input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
+		SendInput(2, input, sizeof(INPUT));
+		Sleep(5);
+		isSystemKeySet = FALSE;
+
 		receiver.Stop();
 		PostQuitMessage(0);
 		break;

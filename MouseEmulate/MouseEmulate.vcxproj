@@ -84,6 +84,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="VirtualMotion.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MouseEmulate.cpp" />
