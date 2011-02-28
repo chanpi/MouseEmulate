@@ -168,11 +168,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int buttonHeight = 32;
 
 	static BOOL isSystemKeySet = FALSE;
-	INPUT input[2];
-
 	static Receiver receiver;
-
-	VMMouseButtonOperation operation;
 
 	switch (message)
 	{
@@ -205,23 +201,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_BRIDGEMESSAGE:
 		{
-			SHORT mouseDownMessage, mouseUpMessage, mouseButtonState;
+			VMMouseMessage mouseMessage;
+			VMDragButton dragButton;
+			//SHORT mouseDownMessage, mouseUpMessage, mouseButtonState;
 			if (!strcmpi((LPCSTR)lParam, "tumble")) {
-				mouseDownMessage	= WM_LBUTTONDOWN;
-				mouseUpMessage		= WM_LBUTTONUP;
-				mouseButtonState	= MK_LBUTTON;
+				dragButton = LButtonDrag;
+				//mouseDownMessage	= WM_LBUTTONDOWN;
+				//mouseUpMessage		= WM_LBUTTONUP;
+				//mouseButtonState	= MK_LBUTTON;
 			} else if (!strcmpi((LPCSTR)lParam, "track")) {
-				mouseDownMessage	= WM_MBUTTONDOWN;
-				mouseUpMessage		= WM_MBUTTONUP;
-				mouseButtonState	= MK_MBUTTON;
+				dragButton = MButtonDrag;
+				//mouseDownMessage	= WM_MBUTTONDOWN;
+				//mouseUpMessage		= WM_MBUTTONUP;
+				//mouseButtonState	= MK_MBUTTON;
 			} else if (!strcmpi((LPCSTR)lParam, "dolly")) {
-				mouseDownMessage	= WM_RBUTTONDOWN;
-				mouseUpMessage		= WM_RBUTTONUP;
-				mouseButtonState	= MK_RBUTTON;
+				dragButton = RButtonDrag;
+				//mouseDownMessage	= WM_RBUTTONDOWN;
+				//mouseUpMessage		= WM_RBUTTONUP;
+				//mouseButtonState	= MK_RBUTTON;
 			} else {
 				break;
 			}
 
+			POINT startPos, endPos;
 			int deltaX = LOWORD(wParam);
 			int deltaY = HIWORD(wParam);
 			int posX, posY;
@@ -229,11 +231,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			RECT rect;
 			GetWindowRect(hTargetWnd, &rect);
-			SetWindowPos(hTargetWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-			SetWindowPos(hTargetWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+			//SetWindowPos(hTargetWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+			//SetWindowPos(hTargetWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
 			SetFocus(hTargetWnd);
-			SetForegroundWindow(hTargetWnd);
+			//SetForegroundWindow(hTargetWnd);
 			posX = rect.left + (rect.right - rect.left)/2;
 			posY = rect.top + (rect.bottom - rect.top)/2;
 
@@ -245,48 +247,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (!isSystemKeySet) {
 				VMVirtualKeyDown(VK_MENU);
 				VMVirtualKeyDown(VK_SHIFT);
-				//input[0].type			= INPUT_KEYBOARD;
-				//input[0].ki.wVk			= VK_MENU;
-				//input[0].ki.wScan		= MapVirtualKey(VK_MENU, 0);
-				//input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
-				//input[0].ki.time		= 0;						// タイムスタンプ
-				//input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
-
-				//input[1].type			= INPUT_KEYBOARD;
-				//input[1].ki.wVk			= VK_SHIFT;
-				//input[1].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
-				//input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY;	// キーダウン
-				//input[1].ki.time		= 0;						// タイムスタンプ
-				//input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
-
-				//SendInput(2, input, sizeof(INPUT));
 				Sleep(5);
 				isSystemKeySet = TRUE;
 			}
 
 			// 子ウィンドウに送信
-			//PostMessage(g_hChildWnd, mouseDownMessage, MK_SHIFT | mouseButtonState, MAKELPARAM(posX, posY));
-			//PostMessage(g_hChildWnd, WM_MOUSEMOVE, MK_SHIFT | mouseButtonState, MAKELPARAM(posX+=10, posY+=30));
-			//PostMessage(g_hChildWnd, mouseUpMessage, MK_SHIFT, MAKELPARAM(posX, posY));
+			startPos.x = posX;
+			startPos.y = posY;
+			endPos.x = posX + deltaX;
+			endPos.y = posY + deltaY;
+			mouseMessage.hTargetWnd		= g_hChildWnd;
+			mouseMessage.dragButton		= dragButton;
+			mouseMessage.dragStartPos	= startPos;
+			mouseMessage.dragEndPos		= endPos;
+			mouseMessage.uKeyState		= MK_SHIFT;
 
-
+			VMMouseDrag(&mouseMessage);
 			
 			// 親ウィンドウに送信
 			//if (isSystemKeySet) {
-			//	input[0].type			= INPUT_KEYBOARD;
-			//	input[0].ki.wVk			= VK_SHIFT;
-			//	input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
-			//	input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-			//	input[0].ki.time		= 0;										// タイムスタンプ
-			//	input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
-
-			//	input[1].type			= INPUT_KEYBOARD;
-			//	input[1].ki.wVk			= VK_MENU;
-			//	input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
-			//	input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-			//	input[1].ki.time		= 0;										// タイムスタンプ
-			//	input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
-			//	SendInput(2, input, sizeof(INPUT));
+			//	VMVirtualKeyUp(VK_SHIFT);
+			//	VMVirtualKeyUp(VK_MENU);
 			//	Sleep(5);
 			//	isSystemKeySet = FALSE;
 			//}
@@ -335,20 +316,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 
-		input[0].type			= INPUT_KEYBOARD;
-		input[0].ki.wVk			= VK_SHIFT;
-		input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
-		input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-		input[0].ki.time		= 0;										// タイムスタンプ
-		input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
+		//input[0].type			= INPUT_KEYBOARD;
+		//input[0].ki.wVk			= VK_SHIFT;
+		//input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
+		//input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+		//input[0].ki.time		= 0;										// タイムスタンプ
+		//input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
 
-		input[1].type			= INPUT_KEYBOARD;
-		input[1].ki.wVk			= VK_MENU;
-		input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
-		input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-		input[1].ki.time		= 0;										// タイムスタンプ
-		input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
-		SendInput(2, input, sizeof(INPUT));
+		//input[1].type			= INPUT_KEYBOARD;
+		//input[1].ki.wVk			= VK_MENU;
+		//input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
+		//input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
+		//input[1].ki.time		= 0;										// タイムスタンプ
+		//input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
+		//SendInput(2, input, sizeof(INPUT));
+		VMVirtualKeyUp(VK_SHIFT);
+		VMVirtualKeyUp(VK_MENU);
 		Sleep(5);
 		isSystemKeySet = FALSE;
 

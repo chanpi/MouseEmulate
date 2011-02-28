@@ -1,18 +1,20 @@
 #ifndef _VIRTUAL_MOTION_
 #define _VIRTUAL_MOTION_
 
-typedef struct {
-	UINT uMouseMessage;
-	UINT uKeyState;
-	int x;
-	int y;
-} VMMouseMessage;
+typedef enum {
+	LButtonDrag,
+	MButtonDrag,
+	RButtonDrag,
+} VMDragButton;
 
 typedef struct {
 	HWND hTargetWnd;
-	VMMouseMessage **pMouseMessage;
-	int nMessageCount;
-} VMMouseOperation;
+	VMDragButton dragButton;
+	UINT uKeyState;
+	POINT dragStartPos;
+	POINT dragEndPos;
+} VMMouseMessage;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +24,8 @@ extern "C" {
 	__declspec(dllexport) UINT VMVirtualKeyDown(WORD wVirtualKey);
 	__declspec(dllexport) UINT VMVirtualKeyUp(WORD wVirtualKey);
 	
-	__declspec(dllexport) BOOL VMMouseButtonOperation(const VMMouseOperation* pMouseOperation);
+	// マウスドラッグ
+	__declspec(dllexport) BOOL VMMouseDrag(const VMMouseMessage* mouseMessage);
 
 #ifdef __cplusplus
 }
