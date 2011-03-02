@@ -203,22 +203,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			VMMouseMessage mouseMessage;
 			VMDragButton dragButton;
-			//SHORT mouseDownMessage, mouseUpMessage, mouseButtonState;
 			if (!strcmpi((LPCSTR)lParam, "tumble")) {
 				dragButton = LButtonDrag;
-				//mouseDownMessage	= WM_LBUTTONDOWN;
-				//mouseUpMessage		= WM_LBUTTONUP;
-				//mouseButtonState	= MK_LBUTTON;
 			} else if (!strcmpi((LPCSTR)lParam, "track")) {
 				dragButton = MButtonDrag;
-				//mouseDownMessage	= WM_MBUTTONDOWN;
-				//mouseUpMessage		= WM_MBUTTONUP;
-				//mouseButtonState	= MK_MBUTTON;
 			} else if (!strcmpi((LPCSTR)lParam, "dolly")) {
 				dragButton = RButtonDrag;
-				//mouseDownMessage	= WM_RBUTTONDOWN;
-				//mouseUpMessage		= WM_RBUTTONUP;
-				//mouseButtonState	= MK_RBUTTON;
 			} else {
 				break;
 			}
@@ -316,20 +306,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 
-		//input[0].type			= INPUT_KEYBOARD;
-		//input[0].ki.wVk			= VK_SHIFT;
-		//input[0].ki.wScan		= MapVirtualKey(VK_SHIFT, 0);
-		//input[0].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-		//input[0].ki.time		= 0;										// タイムスタンプ
-		//input[0].ki.dwExtraInfo	= GetMessageExtraInfo();
-
-		//input[1].type			= INPUT_KEYBOARD;
-		//input[1].ki.wVk			= VK_MENU;
-		//input[1].ki.wScan		= MapVirtualKey(VK_MENU, 0);
-		//input[1].ki.dwFlags		= KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;	// キーダウン
-		//input[1].ki.time		= 0;										// タイムスタンプ
-		//input[1].ki.dwExtraInfo	= GetMessageExtraInfo();
-		//SendInput(2, input, sizeof(INPUT));
 		VMVirtualKeyUp(VK_SHIFT);
 		VMVirtualKeyUp(VK_MENU);
 		Sleep(5);
